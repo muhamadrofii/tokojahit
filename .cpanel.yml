@@ -1,6 +1,11 @@
 ---
   deployment:
     tasks:
-      - export DEPLOYPATH=/home/noordond/public_html/
-      - /bin/cp index.html $DEPLOYPATH
-      - /bin/cp style.css $DEPLOYPATH
+      - echo "🚀 Deploying Laravel..."
+      - export DEPLOY_PATH=/home/noordond/repositories/tokojahit
+      - /bin/cp -r public/* /home/noordond/public_html/
+      - /usr/local/bin/php /home/noordond/repositories/tokojahit/artisan cache:clear
+      - /usr/local/bin/php /home/noordond/repositories/tokojahit/artisan config:cache
+      - /usr/local/bin/php /home/noordond/repositories/tokojahit/artisan route:cache
+      - echo "✅ Deployment selesai!"
+  
