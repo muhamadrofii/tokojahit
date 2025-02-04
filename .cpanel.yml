@@ -3,8 +3,8 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/your-username/public_html/
-    - export LARAVELPATH=/home/your-username/laravel-app/
+    - export DEPLOYPATH=/home/noordond/public_html/
+    - export LARAVELPATH=/home/noordond/noordondom.shop/
 
     # Clone atau update kode ke folder Laravel (di luar public_html)
     - /bin/mkdir -p $LARAVELPATH
