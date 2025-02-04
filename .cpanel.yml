@@ -1,11 +1,42 @@
+##### THIS ALLOWS US TO DEPLOY A LARAVEL PROJECT FROM A GIT REPO #####
+
 ---
   deployment:
     tasks:
-      - echo "🚀 Deploying Laravel..."
-      - export DEPLOY_PATH=/home/noordond/repositories/tokojahit
-      - /bin/cp -r public/* /home/noordond/public_html/
-      - /usr/local/bin/php /home/noordond/repositories/tokojahit/artisan cache:clear
-      - /usr/local/bin/php /home/noordond/repositories/tokojahit/artisan config:cache
-      - /usr/local/bin/php /home/noordond/repositories/tokojahit/artisan route:cache
-      - echo "✅ Deployment selesai!"
+      # 1️⃣ Tentukan path deployment
+      - export DEPLOYPATH=/home/noordond/noordondom.shop
+      - export PUBLICHTML=/home/noordond/public_html
+  
+      # 2️⃣ Pastikan folder tujuan ada
+      - mkdir -p $DEPLOYPATH
+  
+      # 3️⃣ Copy semua file Laravel ke folder deployment (kecuali yang tidak perlu)
+      - rsync -av --exclude=".git" --exclude="node_modules" --exclude="vendor" --exclude="storage/logs" . $DEPLOYPATH
+  
+      # 4️⃣ Pindah ke folder deployment
+      - cd $DEPLOYPATH
+  
+      # 5️⃣ Install dependensi Composer
+      - /opt/cpanel/composer/bin/composer install --no-dev --prefer-dist
+  
+      # 6️⃣ Set permission folder storage & cache
+      - chmod -R 775 storage bootstrap/cache
+      - chown -R $USER:$USER storage bootstrap/cache
+  
+      # 7️⃣ Pastikan file .env ada dan generate key
+      - cp .env.example .env || true
+      - php artisan key:generate
+  
+      # 8️⃣ Pastikan direktori publik Laravel diarahkan ke public_html
+      - rm -rf $PUBLICHTML
+      - ln -s $DEPLOYPATH/public $PUBLICHTML
+  
+      # 9️⃣ Jalankan migrasi database (opsional, jika ada perubahan database)
+      - php artisan migrate --force
+  
+      # 🔟 Clear cache & konfigurasi agar perubahan langsung diterapkan
+      - php artisan config:clear
+      - php artisan cache:clear
+      - php artisan route:clear
+      - php artisan view:clear
   
