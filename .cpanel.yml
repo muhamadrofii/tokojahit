@@ -1,42 +1,29 @@
-##### THIS ALLOWS US TO DEPLOY A LARAVEL PROJECT FROM A GIT REPO #####
+# .cpanel.yml
 
 ---
-  deployment:
-    tasks:
-      # 1️⃣ Tentukan path deployment
-      - export DEPLOYPATH=/home/noordond/noordondom.shop
-      - export PUBLICHTML=/home/noordond/public_html
-  
-      # 2️⃣ Pastikan folder tujuan ada
-      - mkdir -p $DEPLOYPATH
-  
-      # 3️⃣ Copy semua file Laravel ke folder deployment (kecuali yang tidak perlu)
-      - rsync -av --exclude=".git" --exclude="node_modules" --exclude="vendor" --exclude="storage/logs" . $DEPLOYPATH
-  
-      # 4️⃣ Pindah ke folder deployment
-      - cd $DEPLOYPATH
-  
-      # 5️⃣ Install dependensi Composer
-      - /opt/cpanel/composer/bin/composer install --no-dev --prefer-dist
-  
-      # 6️⃣ Set permission folder storage & cache
-      - chmod -R 775 storage bootstrap/cache
-      - chown -R $USER:$USER storage bootstrap/cache
-  
-      # 7️⃣ Pastikan file .env ada dan generate key
-      - cp .env.example .env || true
-      - php artisan key:generate
-  
-      # 8️⃣ Pastikan direktori publik Laravel diarahkan ke public_html
-      - rm -rf $PUBLICHTML
-      - ln -s $DEPLOYPATH/public $PUBLICHTML
-  
-      # 9️⃣ Jalankan migrasi database (opsional, jika ada perubahan database)
-      - php artisan migrate --force
-  
-      # 🔟 Clear cache & konfigurasi agar perubahan langsung diterapkan
-      - php artisan config:clear
-      - php artisan cache:clear
-      - php artisan route:clear
-      - php artisan view:clear
-  
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/your-username/public_html/
+    - export LARAVELPATH=/home/your-username/laravel-app/
+
+    # Clone atau update kode ke folder Laravel (di luar public_html)
+    - /bin/mkdir -p $LARAVELPATH
+    - /bin/cp -R * $LARAVELPATH
+
+    # Install dependencies dengan Composer
+    - cd $LARAVELPATH && /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader
+
+    # Set file permissions
+    - /bin/chmod -R 775 $LARAVELPATH/storage $LARAVELPATH/bootstrap/cache
+
+    # Copy file public ke public_html
+    - /bin/cp -R $LARAVELPATH/public/* $DEPLOYPATH
+
+    # Update index.php di public_html agar sesuai dengan path Laravel
+    - echo "<?php
+      require __DIR__.'/../laravel-app/vendor/autoload.php';
+      \$app = require_once __DIR__.'/../laravel-app/bootstrap/app.php';
+      \$kernel = \$app->make(Illuminate\Contracts\Http\Kernel::class);
+      \$response = \$kernel->handle(\$request = Illuminate\Http\Request::capture());
+      \$response->send();
+      \$kernel->terminate(\$request, \$response);" > $DEPLOYPATH/index.php
